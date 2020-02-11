@@ -1,0 +1,22 @@
+sudo: required
+services: 
+    - docker
+
+before_install:
+    - docker build -t kavitesh/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run kavitesh/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t kavitesh/multi-client ./client
+    - docker build -t kavitesh/multi-nginx ./nginx
+    - docker build -t kavitesh/multi-server ./server
+    - docker build -t kavitesh/multi-worker ./worker
+    # login docker hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # push images to docker hub
+    - docker push kavitesh/multi-client
+    - docker push kavitesh/multi-nginx
+    - docker push kavitesh/multi-server
+    - docker push kavitesh/multi-worker
